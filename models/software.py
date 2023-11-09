@@ -1,3 +1,4 @@
+
 class Software:
     def __init__(self, name, current_version, update_url, download_url=None):
         self.name = name
