@@ -2,19 +2,27 @@
     {
         "name": "Google Chrome",
         "current_version": "95.0.4638.69",
-        "update_url": "https://chromeupdates.google.com/ChromeUpdate",
         "download_url": "https://www.google.com/chrome/download/"
     },
     {
         "name": "Mozilla Firefox",
         "current_version": "93.0",
-        "update_url": "https://update.mozilla.org/firefox/",
         "download_url": "https://www.mozilla.org/firefox/download/"
     },
     {
+        "name": "Adobe Acrobat Reader",
+        "current_version": "2021.007.20099",
+        "download_url": "https://get.adobe.com/reader/download/"
+    },
+    {
+        "name": "FileZilla",
+        "current_version": "3.55.1",
+        "download_url": "https://filezilla-project.org/download.php?type=client"
+    },
+
+    {
         "name": "7-Zip",
         "current_version": "19.00",
-        "update_url": "https://www.7-zip.org/update-check",
         "download_url": "https://www.7-zip.org/download.html"
     }
 ]

@@ -7,61 +7,59 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-# Function to get the download directory path from the user
 def get_download_directory():
     print("Please enter the download directory path.")
     directory = input("Download Directory: ").strip()
     return directory
 
-# Function to validate the existence of the directory
 def validate_directory(directory):
-    # Check if the directory does not exist
     if not os.path.exists(directory):
-        # Ask the user if they want to create the directory
         create = input(f"The directory '{directory}' does not exist. Create it? (y/n): ").lower()
         if create == 'y':
-            # Create the directory
             os.makedirs(directory, exist_ok=True)
             print(f"Directory '{directory}' created.")
         else:
-            # Exit the program if the user chooses not to create the directory
             print("Exiting program.")
             exit()
-    # Check if the provided path is not a directory
     elif not os.path.isdir(directory):
         print(f"The path '{directory}' is not a directory.")
         exit()
     return directory
 
-# Function to initiate the download process
-def initiate_download(download_url, download_directory):
-    # Set options for the Chrome driver
+def initiate_download(software_name, download_url, download_directory):
     options = Options()
-    options.headless = True  # Run Chrome in headless mode (no GUI)
+    options.headless = True
     options.add_experimental_option("prefs", {
-        "download.default_directory": download_directory,  # Set the default download directory
-        "download.prompt_for_download": False,  # Disable download prompt
+        "download.default_directory": download_directory,
+        "download.prompt_for_download": False,
     })
 
-    # Set up the Chrome driver
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
-    driver.get(download_url)  # Navigate to the download URL
+    driver.get(download_url)
 
-    # Wait for the download button to be clickable and then click it
     wait = WebDriverWait(driver, 10)
-    download_button = wait.until(EC.element_to_be_clickable((By.ID, "js-download-hero")))
+
+    if software_name == "Google Chrome":
+        download_button = wait.until(EC.element_to_be_clickable((By.ID, "js-download-hero")))
+    elif software_name == "Mozilla Firefox":
+        download_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "div#download-button-thanks a.download-link")))
+        direct_download_url = download_button.get_attribute('href')
+        driver.get(direct_download_url)
+        return
+
     download_button.click()
+    driver.quit()
 
-    driver.quit()  # Close the browser
+# Example usage
+if __name__ == "__main__":
+    download_directory = get_download_directory()
+    download_directory = validate_directory(download_directory)
 
-# Get the download directory from the user
-download_directory = get_download_directory()
-# Validate the download directory
-download_directory = validate_directory(download_directory)
+    # Example download URLs (replace with actual URLs as needed)
+    chrome_download_url = 'https://www.google.com/chrome/'
+    firefox_download_url = 'https://www.mozilla.org/en-US/firefox/new/'
 
-# Example download URL (replace with the actual URL)
-download_url = 'https://www.google.com/chrome/'
-
-# Initiate the download process
-initiate_download(download_url, download_directory)
+    # Initiate the download process for each software
+    initiate_download("Google Chrome", chrome_download_url, download_directory)
+    initiate_download("Mozilla Firefox", firefox_download_url, download_directory)
