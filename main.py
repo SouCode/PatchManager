@@ -1,7 +1,7 @@
 import json
 from models.software import Software
 from controllers.blogMonitor import find_chrome_update, find_firefox_update
-from services.downloader import initiate_download, get_download_directory, validate_directory
+from services.downloader import initiate_chrome_download, initiate_firefox_download, get_download_directory, validate_directory
 
 def load_software_list():
     with open('config/software_list.json', 'r') as file:
@@ -16,17 +16,23 @@ def main():
     for software in software_list:
         print(f"Checking for updates for {software.name}...")
 
-        update_found = False
         if software.name == "Google Chrome":
-            update_found = find_chrome_update()
-        elif software.name == "Mozilla Firefox":
-            update_found = find_firefox_update()
+            if find_chrome_update():
+                print(f"New update found for {software.name}. Initiating download...")
+                chrome_download_url = 'https://chromeenterprise.google/browser/download/#windows-tab'
+                initiate_chrome_download(chrome_download_url, download_directory, '64')
+                initiate_chrome_download(chrome_download_url, download_directory, '32')
+            else:
+                print(f"No new updates for {software.name}.")
 
-        if update_found:
-            print(f"New update found for {software.name}. Initiating download...")
-            initiate_download(software.name, software.download_url, download_directory)
-        else:
-            print(f"No new updates for {software.name}.")
+        elif software.name == "Mozilla Firefox":
+            if find_firefox_update():
+                print(f"New update found for {software.name}. Initiating download...")
+                firefox_download_url = 'https://www.mozilla.org/en-US/firefox/new/'
+                initiate_firefox_download(firefox_download_url, download_directory)
+            else:
+                print(f"No new updates for {software.name}.")
 
 if __name__ == "__main__":
     main()
+
