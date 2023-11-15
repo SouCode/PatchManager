@@ -88,6 +88,41 @@ def initiate_firefox_download(download_url, download_directory):
 
     driver.quit()
 
+def initiate_adobe_acrobat_download(download_page_url, download_directory):
+    options = Options()
+    options.headless = True
+    options.add_experimental_option("prefs", {
+        "download.default_directory": download_directory,
+        "download.prompt_for_download": False,
+    })
+
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
+    driver.get(download_page_url)
+
+    wait = WebDriverWait(driver, 10)
+
+    # Locate the 32-bit installer link
+    installer_32bit = wait.until(EC.presence_of_element_located(
+        (By.XPATH, "(//div[@class='wy-table-responsive'])[1]//tbody/tr[@class='row-even']/td[3]/p/a")))
+    installer_32bit_url = installer_32bit.get_attribute('href')
+
+    # Locate the 64-bit installer link
+    installer_64bit = wait.until(EC.presence_of_element_located(
+        (By.XPATH, "(//div[@class='wy-table-responsive'])[2]//tbody/tr[@class='row-even']/td[3]/p/a")))
+    installer_64bit_url = installer_64bit.get_attribute('href')
+
+    # Download the 32-bit installer
+    driver.get(installer_32bit_url)
+    time.sleep(10)  # Adjust this time as needed
+
+    # Download the 64-bit installer
+    driver.get(installer_64bit_url)
+    time.sleep(10)  # Adjust this time as needed
+
+    driver.quit()
+
+
 
 download_directory = get_download_directory()
 download_directory = validate_directory(download_directory)
@@ -100,3 +135,7 @@ initiate_chrome_download(chrome_download_url, download_directory, '32')
 # Download Firefox
 firefox_download_url = 'https://www.mozilla.org/en-US/firefox/new/'
 initiate_firefox_download(firefox_download_url, download_directory)
+
+# Download Adobe Reader
+adobe_acrobat_page_url = 'https://www.adobe.com/devnet-docs/acrobatetk/tools/ReleaseNotesDC/continuous/dccontinuousnov2023.html#dccontinuousnovtwentytwentythree'
+initiate_adobe_acrobat_download(adobe_acrobat_page_url, download_directory)
