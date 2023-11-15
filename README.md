@@ -1,4 +1,4 @@
-# PatchManager
+NeuraManager:
 Welcome to PatchManager, a comprehensive tool designed for the efficient management of software patches, featuring integration with both Windows Server Update Services (WSUS) and third-party software. This modern, minimalist application is tailored for keeping a variety of software systems up-to-date and secure.
 
 Features
