@@ -30,6 +30,7 @@ def main():
                 print(f"New update found for {software.name}. Initiating download...")
                 firefox_download_url = 'https://www.mozilla.org/en-US/firefox/new/'
                 initiate_firefox_download(firefox_download_url, download_directory)
+                # get all versions https://www.mozilla.org/en-US/firefox/all/#product-desktop-release
             else:
                 print(f"No new updates for {software.name}.")
 

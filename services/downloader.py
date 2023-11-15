@@ -45,6 +45,7 @@ def initiate_chrome_download(download_url, download_directory, architecture):
     wait = WebDriverWait(driver, 10)
 
     # Select MSI file type
+
     msi_dropdown = wait.until(EC.element_to_be_clickable((By.ID, "selectedtext-WINFiletype")))
     msi_dropdown.click()
     msi_option = wait.until(EC.element_to_be_clickable((By.XPATH, "//li[@data-value='msi']")))

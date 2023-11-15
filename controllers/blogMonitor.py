@@ -41,10 +41,32 @@ def find_firefox_update():
         # Use CSS selectors to find the specific posts we're interested in
         for post in soup.select('span.eois5 div.y7VPke a.ZLl54'):
             # Find the span element containing the post title
-            post_title = post.select_one('span.o1DPKc') #fix this !!!!
+            post_title = post.select_one('span.o1DPKc')  # fix this !!!!
             # Check if the post title exists and contains the specific update text
             if post_title and firefox_update_text in post_title.text:
                 # Return True if the specific update is found
                 return True
     # Return False if the update is not found or if the request was not successful
     return False
+
+
+def find_adobe_reader_update(last_known_update):
+    # URL of the Adobe Acrobat Reader DC release notes page
+    adobe_reader_blog_url = 'https://www.adobe.com/devnet-docs/acrobatetk/tools/ReleaseNotesDC/index.html'
+    # Send a GET request to the Adobe Reader release notes URL
+    response = requests.get(adobe_reader_blog_url)
+    # Check if the request was successful
+    if response.ok:
+        # Parse the HTML content of the response
+        soup = BeautifulSoup(response.text, 'html.parser')
+        # Find the first <li> element in the <ul class="simple"> list
+        first_li = soup.select_one('ul.simple li')
+        if first_li:
+            # Extract the text from the first <li> element
+            first_li_text = first_li.get_text(strip=True)
+            # Check if the text of the first <li> is different from the last known update
+            if first_li_text != last_known_update:
+                # Return the text of the new update
+                return first_li_text
+    # Return None if no new update is found or if the request was not successful
+    return None
