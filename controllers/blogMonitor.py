@@ -1,5 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
+from datetime import datetime
+
 
 
 def find_chrome_update():
@@ -70,3 +72,32 @@ def find_adobe_reader_update(last_known_update):
                 return first_li_text
     # Return None if no new update is found or if the request was not successful
     return None
+
+
+def find_zoom_update():
+    # URL of the Zoom support page for release notes
+    zoom_blog_url = 'https://support.zoom.com/hc/en/category?id=kb_category&kb_category=f55a321e8720391089a37408dabb35fa'
+
+    # Send a GET request to the Zoom support page
+    response = requests.get(zoom_blog_url)
+    if response.ok:
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # Find the list of articles
+        articles_list = soup.find('ul', class_='parent-category-articles article-list-ul')
+        if articles_list:
+            # Iterate through the articles to find the newest one
+            for article in articles_list.find_all('li', {'ng-repeat': 'article in data.thisCategoriesArticles'}):
+                article_link = article.find('a')
+                if article_link:
+                    # Extract the date from the article title
+                    article_title = article_link.text.strip()
+                    if "Release notes for" in article_title:
+                        # Extract the date from the title and convert it to a datetime object
+                        release_date_str = article_title.replace("Release notes for ", "")
+                        release_date = datetime.strptime(release_date_str, "%B %d, %Y")
+
+                        # Compare the release date with the current date
+                        if release_date.date() > datetime.now().date():
+                            return True
+    return False

@@ -39,7 +39,7 @@ def initiate_chrome_download(download_url, download_directory, architecture):
     })
 
     service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
+    driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=options)
     driver.get(download_url)
 
     wait = WebDriverWait(driver, 10)
@@ -76,7 +76,7 @@ def initiate_firefox_download(download_url, download_directory):
     })
 
     service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
+    driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=options)
     driver.get(download_url)
 
     wait = WebDriverWait(driver, 10)
@@ -88,6 +88,7 @@ def initiate_firefox_download(download_url, download_directory):
 
     driver.quit()
 
+
 def initiate_adobe_acrobat_download(download_page_url, download_directory):
     options = Options()
     options.headless = True
@@ -97,7 +98,7 @@ def initiate_adobe_acrobat_download(download_page_url, download_directory):
     })
 
     service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
+    driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=options)
     driver.get(download_page_url)
 
     wait = WebDriverWait(driver, 10)
@@ -123,6 +124,40 @@ def initiate_adobe_acrobat_download(download_page_url, download_directory):
     driver.quit()
 
 
+def initiate_zoom_download(download_url, download_directory, arch_type):
+    options = Options()
+    options.headless = True
+    options.add_experimental_option("prefs", {
+        "download.default_directory": download_directory,
+        "download.prompt_for_download": False,
+    })
+
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=options)
+    driver.get(download_url)
+
+    wait = WebDriverWait(driver, 10)
+    # Wait for the panel to be visible and click to expand if necessary
+    panel = wait.until(EC.visibility_of_element_located((By.ID, "collapsePC")))
+    if not panel.get_attribute('class').endswith('in'):
+        driver.find_element(By.ID, "collapsePC").click()
+
+    # Wait for the list of download links to be visible
+    wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.panel-body ul")))
+
+    # Select the correct download link based on architecture type
+    if arch_type == "32bit":
+        download_link = driver.find_element(By.CSS_SELECTOR, "div.panel-body ul li:first-child a")
+    else:  # 64bit
+        download_link = driver.find_element(By.CSS_SELECTOR, "div.panel-body ul li:nth-child(2) a")
+
+    download_link.click()
+
+    # Wait for download to complete
+    time.sleep(10)  # Adjust this time as needed
+
+    driver.quit()
+
 
 download_directory = get_download_directory()
 download_directory = validate_directory(download_directory)
@@ -139,3 +174,9 @@ initiate_firefox_download(firefox_download_url, download_directory)
 # Download Adobe Reader
 adobe_acrobat_page_url = 'https://www.adobe.com/devnet-docs/acrobatetk/tools/ReleaseNotesDC/continuous/dccontinuousnov2023.html#dccontinuousnovtwentytwentythree'
 initiate_adobe_acrobat_download(adobe_acrobat_page_url, download_directory)
+
+
+# Download Zoom
+zoom_download_url = 'https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0060407#collapsePC'
+initiate_zoom_download(zoom_download_url, download_directory, "32bit")
+initiate_zoom_download(zoom_download_url, download_directory, "64bit")
