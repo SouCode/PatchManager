@@ -7,6 +7,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from ..security.security_checks import is_trusted_source, is_ssl_certificate_valid
 
 
 def get_download_directory():
@@ -31,6 +32,11 @@ def validate_directory(directory):
 
 
 def initiate_chrome_download(download_url, download_directory, architecture):
+    # SSL and source checks
+    if not is_trusted_source(download_url) or not is_ssl_certificate_valid(download_url):
+        print("Download URL is not safe.")
+        return
+
     options = Options()
     options.headless = True
     options.add_experimental_option("prefs", {
@@ -39,13 +45,12 @@ def initiate_chrome_download(download_url, download_directory, architecture):
     })
 
     service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=options)
+    driver = webdriver.Chrome(service=service, options=options)
     driver.get(download_url)
 
     wait = WebDriverWait(driver, 10)
 
     # Select MSI file type
-
     msi_dropdown = wait.until(EC.element_to_be_clickable((By.ID, "selectedtext-WINFiletype")))
     msi_dropdown.click()
     msi_option = wait.until(EC.element_to_be_clickable((By.XPATH, "//li[@data-value='msi']")))
@@ -68,6 +73,11 @@ def initiate_chrome_download(download_url, download_directory, architecture):
 
 
 def initiate_firefox_download(download_url, download_directory):
+    # SSL and source checks
+    if not is_trusted_source(download_url) or not is_ssl_certificate_valid(download_url):
+        print("Download URL is not safe.")
+        return
+
     options = Options()
     options.headless = True
     options.add_experimental_option("prefs", {
@@ -76,7 +86,7 @@ def initiate_firefox_download(download_url, download_directory):
     })
 
     service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=options)
+    driver = webdriver.Chrome(service=service, options=options)
     driver.get(download_url)
 
     wait = WebDriverWait(driver, 10)
@@ -90,6 +100,11 @@ def initiate_firefox_download(download_url, download_directory):
 
 
 def initiate_adobe_acrobat_download(download_page_url, download_directory):
+    # SSL and source checks
+    if not is_trusted_source(download_page_url) or not is_ssl_certificate_valid(download_page_url):
+        print("Download URL is not safe.")
+        return
+
     options = Options()
     options.headless = True
     options.add_experimental_option("prefs", {
@@ -98,7 +113,7 @@ def initiate_adobe_acrobat_download(download_page_url, download_directory):
     })
 
     service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=options)
+    driver = webdriver.Chrome(service=service, options=options)
     driver.get(download_page_url)
 
     wait = WebDriverWait(driver, 10)
@@ -125,6 +140,11 @@ def initiate_adobe_acrobat_download(download_page_url, download_directory):
 
 
 def initiate_zoom_download(download_url, download_directory, arch_type):
+    # SSL and source checks
+    if not is_trusted_source(download_url) or not is_ssl_certificate_valid(download_url):
+        print("Download URL is not safe.")
+        return
+
     options = Options()
     options.headless = True
     options.add_experimental_option("prefs", {
@@ -133,7 +153,7 @@ def initiate_zoom_download(download_url, download_directory, arch_type):
     })
 
     service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=options)
+    driver = webdriver.Chrome(service=service, options=options)
     driver.get(download_url)
 
     wait = WebDriverWait(driver, 10)
@@ -174,7 +194,6 @@ initiate_firefox_download(firefox_download_url, download_directory)
 # Download Adobe Reader
 adobe_acrobat_page_url = 'https://www.adobe.com/devnet-docs/acrobatetk/tools/ReleaseNotesDC/continuous/dccontinuousnov2023.html#dccontinuousnovtwentytwentythree'
 initiate_adobe_acrobat_download(adobe_acrobat_page_url, download_directory)
-
 
 # Download Zoom
 zoom_download_url = 'https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0060407#collapsePC'

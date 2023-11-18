@@ -1,0 +1,8 @@
+{
+    "trusted_sources": [
+        "https://www.mozilla.org",
+        "https://chromeenterprise.google",
+        "https://www.adobe.com",
+        "https://support.zoom.com"
+    ]
+}
