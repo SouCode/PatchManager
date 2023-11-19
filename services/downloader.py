@@ -8,6 +8,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from ..security.security_checks import is_trusted_source, is_ssl_certificate_valid
+from ..security.antivirus_scan import scan_file_with_clamav
 
 
 def get_download_directory():
@@ -29,6 +30,15 @@ def validate_directory(directory):
         print(f"The path '{directory}' is not a directory.")
         exit()
     return directory
+
+
+def handle_scan_result(scan_result):
+    if scan_result is None:
+        print("Scan was inconclusive or an error occurred.")
+    elif not scan_result:
+        print("File is infected.")
+    else:
+        print("File is safe.")
 
 
 def initiate_chrome_download(download_url, download_directory, architecture):
@@ -69,6 +79,11 @@ def initiate_chrome_download(download_url, download_directory, architecture):
     # Wait for download to complete
     time.sleep(10)  # Adjust this time as needed
 
+    # Assuming the file name is known or can be determined
+    downloaded_file_path = os.path.join(download_directory, "chrome_installer.msi")
+    scan_result = scan_file_with_clamav(downloaded_file_path)
+    handle_scan_result(scan_result)
+
     driver.quit()
 
 
@@ -95,6 +110,11 @@ def initiate_firefox_download(download_url, download_directory):
 
     # Wait for download to complete
     time.sleep(10)  # Adjust this time as needed
+
+    # Assuming the file name is known or can be determined
+    downloaded_file_path = os.path.join(download_directory, "firefox_installer.exe")
+    scan_result = scan_file_with_clamav(downloaded_file_path)
+    handle_scan_result(scan_result)
 
     driver.quit()
 
@@ -136,6 +156,15 @@ def initiate_adobe_acrobat_download(download_page_url, download_directory):
     driver.get(installer_64bit_url)
     time.sleep(10)  # Adjust this time as needed
 
+    # Assuming the file names are known or can be determined
+    downloaded_file_path_32bit = os.path.join(download_directory, "adobe_reader_32bit_installer.exe")
+    scan_result_32bit = scan_file_with_clamav(downloaded_file_path_32bit)
+    handle_scan_result(scan_result_32bit)
+
+    downloaded_file_path_64bit = os.path.join(download_directory, "adobe_reader_64bit_installer.exe")
+    scan_result_64bit = scan_file_with_clamav(downloaded_file_path_64bit)
+    handle_scan_result(scan_result_64bit)
+
     driver.quit()
 
 
@@ -175,6 +204,11 @@ def initiate_zoom_download(download_url, download_directory, arch_type):
 
     # Wait for download to complete
     time.sleep(10)  # Adjust this time as needed
+
+    # Assuming the file name is known or can be determined
+    downloaded_file_path = os.path.join(download_directory, f"zoom_installer_{arch_type}.exe")
+    scan_result = scan_file_with_clamav(downloaded_file_path)
+    handle_scan_result(scan_result)
 
     driver.quit()
 
