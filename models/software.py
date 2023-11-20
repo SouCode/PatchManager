@@ -1,5 +1,6 @@
 class Software:
     def __init__(self, name, current_version, download_url):
+        self.architecture = None
         self.name = name
         self.current_version = current_version
         self.download_url = download_url

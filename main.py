@@ -1,6 +1,3 @@
-import json
-from models.software import Software
-from controllers.blogMonitor import find_chrome_update, find_firefox_update, find_adobe_reader_update, find_zoom_update
 from services.downloader import (
     initiate_chrome_download,
     initiate_firefox_download,
@@ -9,46 +6,44 @@ from services.downloader import (
     get_download_directory,
     validate_directory
 )
-from security_checks import is_trusted_source
+from controllers.blogMonitor import (
+    find_chrome_update,
+    find_firefox_update,
+    find_adobe_reader_update,
+    find_zoom_update
+)
 
-
-def load_software_list():
-    with open('config/software_list.json', 'r') as file:
-        software_data = json.load(file)
-        return [Software(**software) for software in software_data]
 
 def main():
-    software_list = load_software_list()
     download_directory = get_download_directory()
     download_directory = validate_directory(download_directory)
 
-    for software in software_list:
-        print(f"Checking for updates for {software.name}...")
+    # Google Chrome Update Check and Download
+    chrome_download_url = 'https://chromeenterprise.google/browser/download/#windows-tab'
+    if find_chrome_update():
+        print("New update found for Google Chrome. Initiating download...")
+        initiate_chrome_download(chrome_download_url, download_directory, '64bit')
+        initiate_chrome_download(chrome_download_url, download_directory, '32bit')
 
-        update_found = False
-        if software.name == "Google Chrome":
-            update_found = find_chrome_update()
-            if update_found:
-                print(f"New update found for {software.name}. Initiating download...")
-                initiate_chrome_download(software.download_url, download_directory)
-        elif software.name == "Mozilla Firefox":
-            update_found = find_firefox_update()
-            if update_found:
-                print(f"New update found for {software.name}. Initiating download...")
-                initiate_firefox_download(software.download_url, download_directory)
-        elif software.name == "Adobe Acrobat":
-            update_found = find_adobe_reader_update()
-            if update_found:
-                print(f"New update found for {software.name}. Initiating download...")
-                initiate_adobe_acrobat_download(software.download_url, download_directory)
-        elif software.name == "Zoom":
-            update_found = find_zoom_update()
-            if update_found:
-                print(f"New update found for {software.name}. Initiating download...")
-                initiate_zoom_download(software.download_url, download_directory)
+    # Mozilla Firefox Update Check and Download
+    firefox_download_url = 'https://www.mozilla.org/en-US/firefox/new/'
+    if find_firefox_update():
+        print("New update found for Mozilla Firefox. Initiating download...")
+        initiate_firefox_download(firefox_download_url, download_directory)
 
-        if not update_found:
-            print(f"No new updates for {software.name}.")
+    # Adobe Acrobat Update Check and Download
+    adobe_acrobat_download_url = 'https://www.adobe.com/devnet-docs/acrobatetk/tools/ReleaseNotesDC/continuous/dccontinuousnov2023.html#dccontinuousnovtwentytwentythree'
+    if find_adobe_reader_update():
+        print("New update found for Adobe Acrobat. Initiating download...")
+        initiate_adobe_acrobat_download(adobe_acrobat_download_url, download_directory)
+
+    # Zoom Update Check and Download
+    zoom_download_url = 'https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0060407#collapsePC'
+    if find_zoom_update():
+        print("New update found for Zoom. Initiating download...")
+        initiate_zoom_download(zoom_download_url, download_directory, "32bit")
+        initiate_zoom_download(zoom_download_url, download_directory, "64bit")
+
 
 if __name__ == "__main__":
     main()

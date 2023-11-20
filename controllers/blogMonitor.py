@@ -77,7 +77,7 @@ def find_firefox_update():
     return False
 
 
-def find_adobe_reader_update(last_known_update):
+def find_adobe_reader_update():
     # Define the URL for Adobe Acrobat Reader DC release notes
     adobe_reader_blog_url = 'https://www.adobe.com/devnet-docs/acrobatetk/tools/ReleaseNotesDC/index.html'
 
@@ -96,10 +96,10 @@ def find_adobe_reader_update(last_known_update):
                 # Extract the text from the first <li> element
                 first_li_text = first_li.get_text(strip=True)
 
-                # Check if the text of the first <li> is different from the last known update
-                if first_li_text != last_known_update:
-                    # Return the text of the new update
-                    return first_li_text
+                # You can add logic here to determine if the text indicates a new update
+                # For example, checking if the date in the text is more recent than a certain date
+                # For simplicity, let's assume any found text indicates a new update
+                return True
         else:
             # Print an error message if the status code is not 200
             print(f"Unexpected status code: {response.status_code}")
@@ -110,8 +110,8 @@ def find_adobe_reader_update(last_known_update):
         # Print an error message if a parsing error occurs
         print(f"An error occurred during parsing: {e}")
 
-    # Return None if no new update is found or if an error occurred
-    return None
+    # Return False if no new update is found or if an error occurred
+    return False
 
 
 def find_zoom_update():
