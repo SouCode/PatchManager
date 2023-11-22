@@ -5,40 +5,33 @@ from requests import RequestException
 
 
 def find_chrome_update():
-    # URL of the Google Chrome releases blog
     chrome_blog_url = 'https://chromereleases.googleblog.com/'
-    # Text to identify the specific update we're looking for
-    chrome_update_text = "Beta Channel Update for ChromeOS / ChromeOS Flex"
+    chrome_update_text = "Beta Channel Release for ChromeOS / ChromeOS Flex"
+    version_prefix = "The Beta channel has been updated to"
 
     try:
-        # Attempt to send a GET request to the Chrome blog URL
         response = requests.get(chrome_blog_url)
-
-        # Check if the response status code is 200 (OK)
         if response.status_code == 200:
-            # Parse the HTML content of the response
             soup = BeautifulSoup(response.text, 'html.parser')
 
-            # Iterate over each post title on the blog
-            for post in soup.find_all('h2', class_='title'):
-                # Find the 'a' tag within the post title
-                a_tag = post.find('a')
+            for post in soup.find_all('div', class_='post'):
+                title = post.find('h2', class_='title')
+                if title and chrome_update_text in title.get_text():
+                    date_tag = post.find('span', class_='publishdate')
+                    date_text = date_tag.get_text(strip=True) if date_tag else "Unknown Date"
 
-                # Check if the 'a' tag exists and contains the specific update text
-                if a_tag and chrome_update_text in a_tag.text:
-                    # Return True if the specific update is found
-                    return True
+                    content_div = post.find('div', class_='post-content post-original')
+                    if content_div:
+                        if version_prefix in content_div.get_text():
+                            version_info = content_div.find('span', style="color: black; white-space-collapse: preserve;").get_text(strip=True)
+                            return True, date_text, version_info
+
         else:
-            # Print an error message if the status code is not 200
             print(f"Unexpected status code: {response.status_code}")
     except RequestException as e:
-        # Print an error message if a network error occurs
         print(f"Request failed: {e}")
 
-    # Return False if the update is not found or if an error occurred
-    return False
-
-
+    return False, None, None
 def find_firefox_update():
     # URL of the Mozilla Firefox announcement group
     firefox_blog_url = 'https://groups.google.com/g/mozilla.announce'
@@ -155,3 +148,9 @@ def find_zoom_update():
 
     # Return False if no new update is found or if an error occurred
     return False
+
+update_found, update_date, update_info = find_chrome_update()
+if update_found:
+    print(f"Update found on {update_date}: {update_info}")
+else:
+    print("No update found.")
