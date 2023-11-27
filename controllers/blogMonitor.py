@@ -4,34 +4,6 @@ from datetime import datetime
 from requests import RequestException
 
 
-def find_chrome_update():
-    chrome_blog_url = 'https://chromereleases.googleblog.com/'
-    chrome_update_text = "Beta Channel Release for ChromeOS / ChromeOS Flex"
-    version_prefix = "The Beta channel has been updated to"
-
-    try:
-        response = requests.get(chrome_blog_url)
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.text, 'html.parser')
-
-            for post in soup.find_all('div', class_='post'):
-                title = post.find('h2', class_='title')
-                if title and chrome_update_text in title.get_text():
-                    date_tag = post.find('span', class_='publishdate')
-                    date_text = date_tag.get_text(strip=True) if date_tag else "Unknown Date"
-
-                    content_div = post.find('div', class_='post-content post-original')
-                    if content_div:
-                        if version_prefix in content_div.get_text():
-                            version_info = content_div.find('span', style="color: black; white-space-collapse: preserve;").get_text(strip=True)
-                            return True, date_text, version_info
-
-        else:
-            print(f"Unexpected status code: {response.status_code}")
-    except RequestException as e:
-        print(f"Request failed: {e}")
-
-    return False, None, None
 def find_firefox_update():
     # URL of the Mozilla Firefox announcement group
     firefox_blog_url = 'https://groups.google.com/g/mozilla.announce'
@@ -149,8 +121,55 @@ def find_zoom_update():
     # Return False if no new update is found or if an error occurred
     return False
 
-update_found, update_date, update_info = find_chrome_update()
+
+def find_chrome_update():
+    chrome_blog_url = 'https://chromereleases.googleblog.com/'
+    chrome_update_text = "Beta Channel Release for ChromeOS / ChromeOS Flex"
+
+    try:
+        response = requests.get(chrome_blog_url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            for post in soup.find_all('div', class_='post'):
+                title = post.find('h2', class_='title')
+                if title and chrome_update_text in title.get_text():
+                    date_tag = post.find('span', class_='publishdate')
+                    date_text = date_tag.get_text(strip=True) if date_tag else "Unknown Date"
+                    return True, date_text, post
+        else:
+            print(f"Unexpected status code: {response.status_code}")
+    except RequestException as e:
+        print(f"Request failed: {e}")
+
+    return False, None, None
+
+
+def extract_beta_update_info(post):
+    search_phrase = "The Beta channel has been updated to"
+    post_body_div = post.find('div', class_='post-body')
+    if post_body_div:
+        paragraphs = post_body_div.find_all('p')
+        for p in paragraphs:
+            if search_phrase in p.get_text():
+                update_info = p.get_text(strip=True)
+                # Correcting the spacing issue
+                update_info = update_info.replace("updated to", "updated to ")
+
+                # Removing the platform version part
+                platform_version_index = update_info.find("(Platform version:")
+                if platform_version_index != -1:
+                    update_info = update_info[:platform_version_index].strip() + " for ChromeOS devices."
+
+                return update_info
+    return "Update information not found"
+
+
+# Example usage
+update_found, update_date, post = find_chrome_update()
 if update_found:
-    print(f"Update found on {update_date}: {update_info}")
+    print(f"Update found on {update_date}: ")
+    update_info = extract_beta_update_info(post)
+    print(update_info)
 else:
     print("No update found.")
