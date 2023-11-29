@@ -5,41 +5,33 @@ from requests import RequestException
 
 
 def find_firefox_update():
-    # URL of the Mozilla Firefox announcement group
-    firefox_blog_url = 'https://groups.google.com/g/mozilla.announce'
-    # Text to identify the specific update we're looking for
-    firefox_update_text = "Firefox update is now available"
+    firefox_releases_url = 'https://www.mozilla.org/en-US/firefox/releases/'
 
     try:
-        # Attempt to send a GET request to the Firefox announcement group URL
-        response = requests.get(firefox_blog_url)
-
-        # Check if the response status code is 200 (OK)
+        response = requests.get(firefox_releases_url)
         if response.status_code == 200:
-            # Parse the HTML content of the response
             soup = BeautifulSoup(response.text, 'html.parser')
+            release_list = soup.find('ol', class_='c-release-list')
+            if release_list:
+                latest_release = release_list.find('li')
+                if latest_release:
+                    main_version = latest_release.strong.a.get_text()
+                    print(f"Latest Firefox version: {main_version}")
 
-            # Use CSS selectors to find the specific posts we're interested in
-            for post in soup.select('span.eois5 div.y7VPke a.ZLl54'):
-                # Find the span element containing the post title
-                post_title = post.select_one('span.o1DPKc')
-
-                # Check if the post title exists and contains the specific update text
-                if post_title and firefox_update_text in post_title.text:
-                    # Return True if the specific update is found
-                    return True
+                    # Check for sub-versions
+                    sub_versions = latest_release.find('ol')
+                    if sub_versions:
+                        for sub_version in sub_versions.find_all('li'):
+                            print(f"Sub-version: {sub_version.a.get_text()}")
         else:
-            # Print an error message if the status code is not 200
             print(f"Unexpected status code: {response.status_code}")
     except RequestException as e:
-        # Print an error message if a network error occurs
         print(f"Request failed: {e}")
     except Exception as e:
-        # Print an error message if a parsing error occurs
         print(f"An error occurred during parsing: {e}")
 
-    # Return False if the update is not found or if an error occurred
-    return False
+
+find_firefox_update()
 
 
 def find_adobe_reader_update():
@@ -165,7 +157,6 @@ def extract_beta_update_info(post):
     return "Update information not found"
 
 
-# Example usage
 update_found, update_date, post = find_chrome_update()
 if update_found:
     print(f"Update found on {update_date}: ")
@@ -173,4 +164,3 @@ if update_found:
     print(update_info)
 else:
     print("No update found.")
-#test
