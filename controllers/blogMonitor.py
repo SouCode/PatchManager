@@ -2,6 +2,9 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 from requests import RequestException
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 
 
 def find_firefox_update():
@@ -16,13 +19,12 @@ def find_firefox_update():
                 latest_release = release_list.find('li')
                 if latest_release:
                     main_version = latest_release.strong.a.get_text()
-                    print(f"Latest Firefox version: {main_version}")
 
                     # Check for sub-versions
                     sub_versions = latest_release.find('ol')
                     if sub_versions:
                         for sub_version in sub_versions.find_all('li'):
-                            print(f"Sub-version: {sub_version.a.get_text()}")
+                            print(f"Firefox Update found: {sub_version.a.get_text()}")
         else:
             print(f"Unexpected status code: {response.status_code}")
     except RequestException as e:
@@ -44,7 +46,7 @@ def find_adobe_reader_update():
             first_li = soup.select_one('ul.simple li')
             if first_li:
                 first_li_text = first_li.get_text(strip=True)
-                print(f"Latest Adobe Reader update: {first_li_text}")
+                print(f"Adobe Reader update found: {first_li_text}")
         else:
             print(f"Unexpected status code: {response.status_code}")
     except RequestException as e:
@@ -57,39 +59,40 @@ find_adobe_reader_update()
 
 
 def find_zoom_update():
-    zoom_blog_url = 'https://support.zoom.com/hc/en/category?id=kb_category&kb_category=f55a321e8720391089a37408dabb35fa'
+    zoom_blog_url = 'https://support.zoom.us/hc/en-us/sections/201214205-Release-Notes'
+    options = Options()
+    options.add_argument("--headless")  # Run in headless mode
+    driver = webdriver.Chrome(options=options)
 
     try:
-        response = requests.get(zoom_blog_url)
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.text, 'html.parser')
+        driver.get(zoom_blog_url)
+        driver.implicitly_wait(10)
 
-            # Adjust the selector to target the specific <ul> within the nested structure
-            target_div = soup.find('div', id='x883eb8f887c5751089a37408dabb35bc')
-            if target_div:
-                ul_element = target_div.find('ul', class_='parent-category-articles article-list-ul')
-                if ul_element:
-                    first_li = ul_element.find('li', class_='ng-scope')
-                    if first_li:
-                        article_link = first_li.find('a', class_='ng-binding')
-                        if article_link and "Release notes for" in article_link.text:
-                            release_info = article_link.text.strip()
-                            print(f"New Zoom update found: {release_info}")
-                            return
-            else:
-                print("Target div not found.")
-        else:
-            print(f"Unexpected status code: {response.status_code}")
-    except RequestException as e:
-        print(f"Request failed: {e}")
+        release_info_element = driver.find_element(By.XPATH, "//li/a[contains(text(), 'Release notes for')]")
+        release_info = release_info_element.text.strip()
+        release_link = release_info_element.get_attribute('href')
+
+        # Navigate to the release link
+        driver.get(release_link)
+        driver.implicitly_wait(10)
+
+        # Extract information from the specific <h2> and <h3> elements
+        h3_element = driver.find_element(By.XPATH, "//h2[@id='01H84VG9B4H8QAGJMHPNHHDZ74']/following-sibling::h3")
+        h3_text = h3_element.text.strip()
+        print(f"Zoom: Update found: ")
+        return release_info, h3_text
+
     except Exception as e:
-        print(f"An error occurred during parsing: {e}")
+        print(f"An error occurred: {e}")
+        return None, None
 
-    print("No new Zoom updates found.")
+    finally:
+        driver.quit()
 
-# Call the function
-find_zoom_update()
-
+# Call the function and print the result
+info, h3_content = find_zoom_update()
+print(info)
+print(h3_content)
 
 def find_and_extract_chrome_update():
     chrome_blog_url = 'https://chromereleases.googleblog.com/search?max-results=20'
@@ -107,7 +110,7 @@ def find_and_extract_chrome_update():
                         date_text = post.find('span', class_='publishdate').get_text(strip=True)
                         update_info = extract_update_info_from_post(post)
                         if update_info:
-                            print(f"Update found on {date_text}: {update_info}")
+                            print(f"Chrome: Update found on {date_text}: {update_info}")
                             return
                         else:
                             print("Update information not found.")
