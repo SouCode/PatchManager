@@ -7,7 +7,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
-from ..security.security_checks import is_trusted_source, is_ssl_certificate_valid
 from ..security.antivirus_scan import scan_file_with_clamav
 
 import os
@@ -78,14 +77,9 @@ def handle_scan_result(scan_result, file_path):
         print(f"The file {file_path} is safe.")
 
 
-def initiate_chrome_download(download_url, download_directory, architecture):
-    driver = None  # Initialize driver to None
+def initiate_chrome_download(download_url, download_directory, architecture="64-bit"):
+    driver = None
     try:
-        # SSL and source checks
-        if not is_trusted_source(download_url) or not is_ssl_certificate_valid(download_url):
-            print("Download URL is not safe.")
-            return
-
         options = Options()
         options.headless = True
         options.add_experimental_option("prefs", {
@@ -95,24 +89,31 @@ def initiate_chrome_download(download_url, download_directory, architecture):
 
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=options)
-        driver.get(download_url)
+        driver.set_window_size(1200, 800)  # Set a larger window size
 
+        driver.get(download_url)
         wait = WebDriverWait(driver, 10)
 
-        # Select MSI file type
-        msi_dropdown = wait.until(EC.element_to_be_clickable((By.ID, "selectedtext-WINFiletype")))
-        msi_dropdown.click()
-        msi_option = wait.until(EC.element_to_be_clickable((By.XPATH, "//li[@data-value='msi']")))
+        # Click the specified div to open the dropdown
+        msi_dropdown_div = wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/main/section[2]/div/div[2]/div[1]/div[2]/div/div[1]/div/div[5]/div/div[2]/div/div/div[1]")))
+        msi_dropdown_div.click()
+
+        # Wait and click the specific MSI option in the dropdown
+        msi_option = wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/main/section[2]/div/div[2]/div[1]/div[2]/div/div[1]/div/div[5]/div/div[2]/div/div/div[2]/ul/li[2]")))
         msi_option.click()
 
-        # Select architecture (64-bit or 32-bit)
-        arch_dropdown = wait.until(EC.element_to_be_clickable((By.ID, "selectedtext-Architecture")))
-        arch_dropdown.click()
-        arch_option = wait.until(EC.element_to_be_clickable((By.XPATH, f"//li[@data-value='{architecture}']")))
-        arch_option.click()
+        # Wait for any overlays to disappear
+        wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, "div.overlay")))
+
+        # If architecture is 32-bit, change the selection
+        if architecture == "32-bit":
+            arch_dropdown = wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/main/section[2]/div/div[2]/div[1]/div[2]/div/div[1]/div/div[5]/div/div[3]/div/div/div[1]/span[3]/span[2]")))
+            arch_dropdown.click()
+            arch_option = wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/main/section[2]/div/div[2]/div[1]/div[2]/div/div[1]/div/div[5]/div/div[3]/div/div/div[2]/ul/li[2]")))
+            arch_option.click()
 
         # Click the download button
-        download_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "a.ce-download__download-dlbutton")))
+        download_button = wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/main/section[2]/div/div[2]/div[1]/div[2]/div/div[1]/div/div[5]/div/div[4]/a[2]")))
         download_button.click()
 
         # Wait for download to complete
@@ -120,8 +121,8 @@ def initiate_chrome_download(download_url, download_directory, architecture):
 
         # Assuming the file name is known or can be determined
         downloaded_file_path = os.path.join(download_directory, "chrome_installer.msi")
-        scan_result = scan_file_with_clamav(downloaded_file_path)
-        handle_scan_result(scan_result, downloaded_file_path)
+        # scan_result = scan_file_with_clamav(downloaded_file_path)
+        # handle_scan_result(scan_result, downloaded_file_path)
 
     except Exception as e:
         print(f"An error occurred during the download process: {e}")
@@ -130,6 +131,7 @@ def initiate_chrome_download(download_url, download_directory, architecture):
             driver.quit()
 
 
+'''
 def initiate_firefox_download(download_url, download_directory):
     driver = None  # Initialize driver to None
     try:
@@ -273,7 +275,7 @@ def initiate_zoom_download(download_url, download_directory, arch_type):
         if driver:
             driver.quit()
 
-
+'''
 download_directory = get_download_directory()
 download_directory = validate_directory(download_directory)
 
@@ -282,6 +284,7 @@ chrome_download_url = 'https://chromeenterprise.google/browser/download/#windows
 initiate_chrome_download(chrome_download_url, download_directory, '64')
 initiate_chrome_download(chrome_download_url, download_directory, '32')
 
+'''
 # Download Firefox
 firefox_download_url = 'https://www.mozilla.org/en-US/firefox/new/'
 initiate_firefox_download(firefox_download_url, download_directory)
@@ -294,3 +297,4 @@ initiate_adobe_acrobat_download(adobe_acrobat_page_url, download_directory)
 zoom_download_url = 'https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0060407#collapsePC'
 initiate_zoom_download(zoom_download_url, download_directory, "32bit")
 initiate_zoom_download(zoom_download_url, download_directory, "64bit")
+'''

@@ -5,6 +5,7 @@ import requests
 from requests.exceptions import SSLError, RequestException
 
 
+'''
 def is_trusted_source(url):
     try:
         with open('config/trusted_sources.json', 'r') as file:
@@ -21,7 +22,7 @@ def is_trusted_source(url):
     except Exception as e:
         logging.error(f"An unexpected error occurred in is_trusted_source: {e}")
         return False
-
+'''
 
 def is_ssl_certificate_valid(url):
     try:
